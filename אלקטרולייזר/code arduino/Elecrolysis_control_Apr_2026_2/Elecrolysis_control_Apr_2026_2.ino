@@ -28,12 +28,11 @@ void setup() {
   Init_Output(BCD_B);
   Init_Output(BCD_C);
   Init_Output(BCD_D);
-  Init_Output(LE_LEFT);
-  digitalWrite(LE_LEFT, HIGH);// lock digit
-  Init_Output(LE_RIGHT);
-  digitalWrite(LE_RIGHT, HIGH);// lock digit
-  //Init_Output(ELECTROD_PWM);
-  Init_Output(PS_OUT);
+  Init_Output(LE_CENTURIES);
+  digitalWrite(LE_CENTURIES, HIGH);// lock digit
+  Init_Output(LE_DOZENS);
+  digitalWrite(LE_DOZENS, HIGH);// lock digit
+  Init_Output(ELECTROD_PWM);
   Init_Output(SPARK_OUT);
  
   pinMode(ENCODER_BIT_0, INPUT_PULLUP);
@@ -41,74 +40,68 @@ void setup() {
   pinMode(SW_IN, INPUT_PULLUP);
 
   
-  Test_7_segments() ;
-  for (int i = 1; i<= 3; i++ ) {Blank_Digit(i);}// blank all digits 
+  
+  for (int i = 1; i<= 3; i++ ) {blank_Digit(i);}// blank all digits 
+  //if you push a long press in the init do calibration
   switch_state = digitalRead(SW_IN);
   if (switch_state == LOW) { // check switch  
-      delay (WAIT_FOR_CALIBRATION) ;  }//
+      delay (WAIT_FOR_CALIBRATION) ;}//
   switch_state = digitalRead(SW_IN);
   if (switch_state == LOW) { // start count down 
-      Calibration() ;  }//  if switch presed long enought - call calibration 
+      Calibration() ;}//  if switch presed long enought - call calibration 
+
  trimmer_read = analogRead(SET_CURRENT_TRIMER_IN);
  pwm = map(trimmer_read,0,1024, MIN_PWM, MAX_PWM);   
- 
- Display_full_Number (electrolysis_time);
+ Serial.println (pwm);
+ NUMBER_TO_DISPLAY (electrolysis_time*UNIT_CALIBRATION);
  Read_Encoder();
+ Serial.println ("init");
 }
 
 void loop() {
+
 //  int switch_state = HIGH ; 
   int temp_read = Read_Encoder();
-  Display_full_Number (electrolysis_time);
+  
   if (temp_read != 0) {
     prescalar_counter = prescalar_counter + temp_read;
-     if (prescalar_counter >= PRESCALAR ) {
+    if (prescalar_counter >= PRESCALAR ) {
       electrolysis_time = electrolysis_time +  (prescalar_counter / PRESCALAR);
       prescalar_counter = 0 ;
-      }
-    if (prescalar_counter <=  (- PRESCALAR) ) {
+    }
+    if (prescalar_counter <= (- PRESCALAR) ) {
       electrolysis_time = electrolysis_time +  (prescalar_counter / PRESCALAR);
       prescalar_counter = 0 ;
-      }
-      
-      if (electrolysis_time <=  MIN_ELECTROLYSIS_TIME) { electrolysis_time =  MIN_ELECTROLYSIS_TIME;}
-      if (electrolysis_time >=  MAX_ELECTROLYSIS_TIME && first_read == false) {
-         electrolysis_time =  MAX_ELECTROLYSIS_TIME;
-         }
-      else if(electrolysis_time >=  MAX_ELECTROLYSIS_TIME_FIRST_READ && first_read == true) {
-         electrolysis_time =  MAX_ELECTROLYSIS_TIME_FIRST_READ;
-         first_read = false;
-         }
-      else if(electrolysis_time >=  MAX_ELECTROLYSIS_TIME &&  electrolysis_time <=  MAX_ELECTROLYSIS_TIME_FIRST_READ && first_read == true) {
-         first_read = false;
-         }
-      Serial.println (electrolysis_time);
-     // Display_full_Number (electrolysis_time);
+    }
+    if (electrolysis_time <= MIN_ELECTROLYSIS_TIME) { electrolysis_time = MIN_ELECTROLYSIS_TIME;}
+
+    if (first_read) {
+      if (electrolysis_time >= MAX_ELECTROLYSIS_TIME_FIRST_READ) {electrolysis_time = MAX_ELECTROLYSIS_TIME_FIRST_READ;}
+    }
+    else {
+      if (electrolysis_time >= MAX_ELECTROLYSIS_TIME) {electrolysis_time = MAX_ELECTROLYSIS_TIME;}
+    }
+
+    Serial.println (electrolysis_time);
+    NUMBER_TO_DISPLAY (electrolysis_time*UNIT_CALIBRATION);
   }
-switch_state = digitalRead(SW_IN);
-  if (switch_state == LOW) { // start count down 
-    delay (BOUNCE_TIME);
-    while  (switch_state == LOW) {
-    switch_state = digitalRead(SW_IN); // wait switch release 
-     }
-  // delay (BOUNCE_TIME);
-     Ignition(SPARK_TIME);
-     digitalWrite (PS_OUT, HIGH);
-     //trimmer_read = analogRead(SET_CURRENT_TRIMER_IN);// to enable trimmer change between demo
-     //pwm = map(trimmer_read,0,1024, MIN_PWM, MAX_PWM);
-     //analogWrite(ELECTROD_PWM, pwm);
-     Count_Down (electrolysis_time); // exit count down is sw preased 
-     Ignition(SPARK_TIME);
-     Display_full_Number(0) ; // just for case of igniting during count down 
-     //analogWrite(ELECTROD_PWM, 0);
-//     digitalWrite (ELECTROD_PWM, LOW);
-//     digitalWrite (ELECTROD_PWM, LOW);// make sure
-     digitalWrite (PS_OUT, LOW);
-     digitalWrite (PS_OUT, LOW);// make sure
-     delay (500); 
-     delay (BOUNCE_TIME);
-      while  (switch_state == LOW) {
-      switch_state = digitalRead(SW_IN); // wait switch release  
-      }
+  if (PRESS_BUTTON()) { // start count down 
+    first_read = false;
+    trimmer_read = analogRead(SET_CURRENT_TRIMER_IN);// to enable trimmer change between demo
+    pwm = map(trimmer_read,0,1024, MIN_PWM, MAX_PWM);
+    analogWrite(ELECTROD_PWM, pwm);
+
+    Count_Down (electrolysis_time); // exit count down is sw preased 
+    
+    if(electrolysis_time <= BLINK_TIME){
+      Ignition(SPARK_TIME);
+      electrolysis_time = DEFAULT_ELECTROLYSIS_TIME;
+      NUMBER_TO_DISPLAY (electrolysis_time*UNIT_CALIBRATION);
+    }
+    analogWrite(ELECTROD_PWM, 0);
+    digitalWrite (ELECTROD_PWM,LOW);
+    delay (1000);
+    
+    
   }
 }

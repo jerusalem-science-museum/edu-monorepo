@@ -1,12 +1,13 @@
 
 int const  MIN_ELECTROLYSIS_TIME = 5 ; //Seconds
 int const  MAX_ELECTROLYSIS_TIME = 60 ; //Seconds
+int const  MAX_ELECTROLYSIS_TIME_FIRST_READ = 80;
 uint32_t const DEFAULT_ELECTROLYSIS_TIME = 30; //sec 
 
-int const PRESCALAR = 4 ; //encoder coun per "click"
+int const PRESCALAR = 4 ; //encoder count per "click"
 
 int const  MIN_PWM = 0 ; //PWM set electrolysis current
-int const  MAX_PWM = 75; //PWM ser electrolysis current
+int const  MAX_PWM = 75; //PWM set electrolysis current
 int const  DEFAULT_PWM = 40 ; //asume 3Volt to set 2A current. based on Dec experiments with 50# stainless steel mesh
 
 int const  SPARK_TIME = 500 ; //mSeconds
@@ -28,7 +29,7 @@ int const  BOUNCE_TIME = 50; //ms
 #define LE_RIGHT (9) // Output right (10th) digit LE (negative pulse) used as units 
 
 //#define LE_EX (10) // Output external (units) digit LE (negative pulse) not used 
-#define ELECTROD_PWM (10) // Output to FET drive electrod ecurrent
+#define ELECTROD_PWM (10) // Output to FET drive electrod current
 #define PS_OUT (10) // Output to FET drive power supply 
 #define SPARK_OUT (11) // Output to FET drive HV spark module
 
@@ -36,5 +37,5 @@ int const  BOUNCE_TIME = 50; //ms
 
 #define SET_CURRENT_TRIMER_IN (A0) // analod input to set PWM
 
-#define ENCODER_BIT_0 (2) // input IO for gray code bit 0, Gren wire in 400 and 100 ppr encoders 
+#define ENCODER_BIT_0 (2) // input IO for gray code bit 0, Green wire in 400 and 100 ppr encoders 
 #define ENCODER_BIT_1 (3) // input IO for gray code bit 1, white wire in 400 and 100 ppr encoders 

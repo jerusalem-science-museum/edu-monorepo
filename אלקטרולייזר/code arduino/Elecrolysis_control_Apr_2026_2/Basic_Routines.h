@@ -8,8 +8,7 @@
 
 /////////////////////////////////////// 7SEG ////////////////////////////////
 // send digit to 4511 
-void Display_Digit(int digit_number, int digit_to_show) {
- if ((digit_number >=1)&&(digit_number <=3)&&(digit_to_show >=0)&&(digit_to_show <=9)) {
+void Display_Digit(int digit_to_show) { 
     digitalWrite(BCD_A, LOW);// asume bit zero 
     if ((digit_to_show & 1) == 1) {digitalWrite(BCD_A, HIGH);}
     digitalWrite(BCD_B, LOW);// asume bit zero 
@@ -17,77 +16,78 @@ void Display_Digit(int digit_number, int digit_to_show) {
     digitalWrite(BCD_C, LOW);// asume bit zero 
     if ((digit_to_show & 4) == 4) {digitalWrite(BCD_C, HIGH);}
     digitalWrite(BCD_D, LOW);// asume bit zero 
-    if ((digit_to_show & 8) == 8) {digitalWrite(BCD_D, HIGH);}
-    switch(digit_number) {
-      case 2:
-       digitalWrite(LE_RIGHT, LOW);
-       digitalWrite(LE_RIGHT, HIGH); 
+    if ((digit_to_show & 8) == 8) {digitalWrite(BCD_D, HIGH);}  
+}
+
+void enable(int digit_enable){
+ switch(digit_enable) {
+      case RIGHT_DIGIT: //range 0-9  '00000110'
+       digitalWrite(LE_UNITS, LOW);
+       digitalWrite(LE_UNITS, HIGH); 
        break;
-      case 3:
-       digitalWrite(LE_LEFT, LOW);
-       digitalWrite(LE_LEFT, HIGH); 
+      case MIDDLE_DIGIT: //range 9-99 '000000101'
+       digitalWrite(LE_DOZENS, LOW);
+       digitalWrite(LE_DOZENS, HIGH); 
+       break;
+      case LEFT_DIGIT: //range 100-999 '00000011'
+       digitalWrite(LE_CENTURIES, LOW);
+       digitalWrite(LE_CENTURIES, HIGH); 
+      
        break;
     }
- }
 }
+
 
 /***********/ 
 // digtal from number extrude the 3 digits to display (dlobal variables) 
 void Digits_from_Number(int in_number){
-    Digit_3_To_Display = 100*(in_number/100)/100;// left digit to disply 
-    int Temp_10 = in_number - 100*Digit_3_To_Display;
-    Digit_2_To_Display = 10*(Temp_10/10)/10;// mid digit to disply 
-    Digit_1_To_Display = Temp_10-10*Digit_2_To_Display;// right digit to disply 
-}
+    Digit_3_To_Display = in_number / 100;// left digit to display 
+    Digit_2_To_Display = (in_number - 100 * Digit_3_To_Display)/10;// mid digit to display 
+    Digit_1_To_Display = in_number % 10 ;// right digit to display 
 
+}
 //************************
 //Blank Digit (send FF)
-void Blank_Digit(int digit_number){
-    digitalWrite(BCD_A, HIGH);// set bit one
-    digitalWrite(BCD_B, HIGH);// set bit one
-    digitalWrite(BCD_C, HIGH);// set bit one
-    digitalWrite(BCD_D, HIGH);// set bit one
-    switch(digit_number) {
-      case 2:
-       digitalWrite(LE_RIGHT, LOW);
-       digitalWrite(LE_RIGHT, HIGH); 
-       break;
-      case 3:
-       digitalWrite(LE_LEFT, LOW);
-       digitalWrite(LE_LEFT, HIGH); 
-       break;
-    }
+void blank_Digit(int digit_enable){ //blank digit right to the left
+  digitalWrite(BCD_A, HIGH);
+  digitalWrite(BCD_B, HIGH);
+  digitalWrite(BCD_C, HIGH);
+  digitalWrite(BCD_D, HIGH);
+
+  enable(digit_enable);
+
 }
 //************************
+void blank_All_Digit(){
+  for(int j=1;j <=  Number_OF_7SEG; j++){
+         blank_Digit(j);
+    }
+}
 
 // display full number 
-void Display_full_Number(int Number_To_Display) {
-  Digits_from_Number(Number_To_Display);
-  Serial.print ("Now display");  
-  Serial.print ("\t"); //tab
-  Serial.println (Number_To_Display);  
-   Display_Digit(2, Digit_1_To_Display);  // for 3 digits use Display_Digit(1, Digit_1_To_Display)
-   Display_Digit(3, Digit_2_To_Display); // for 3 digits use Display_Digit(2, Digit_2_To_Display)
-   //Display_Digit(3, Digit_3_To_Display); // not used    
-}
-//********************
-
-//Test 7 segments display 0-9 same digit on all 3 digits 
-void Test_7_segments(){
-for (int i = 0; i <= 9; i++){
-  Digits_from_Number(Number_To_Display);
-  Serial.print ("testing 7 segments");  
-  Serial.print ("\t"); //tab
-  Serial.println (i);  
-
-   Display_Digit(1, i);  
-   Display_Digit(2, i);
-   Display_Digit(3, i);    
-   delay(1000);
+void NUMBER_TO_DISPLAY(float variable){
+  Digits_from_Number(variable);
+  Display_Digit(Digit_1_To_Display);
+  enable(RIGHT_DIGIT);
+  
+  if(variable < 10 ){
+    blank_Digit(MIDDLE_DIGIT);
+  }
+  else{
+    Display_Digit(Digit_2_To_Display);
+    enable(MIDDLE_DIGIT);
+  }
+  
+  if(variable < 100 ){
+    blank_Digit(LEFT_DIGIT);
+  }
+  else{
+    Display_Digit(Digit_3_To_Display);
+    enable(LEFT_DIGIT);
   }
 }
 //////////////////////////////////////////////////////////////////////////////
-/***********/ 
+
 
 // initial IO to be output and set to zero - may not nead
 void Init_Output(int IO_Pin){
@@ -95,6 +95,24 @@ void Init_Output(int IO_Pin){
   pinMode(IO_Pin, OUTPUT);
   digitalWrite(IO_Pin, LOW);/* make sure low  output */
 }
+
+bool PRESS_BUTTON() {
+  // Check if the button is pressed
+  if (digitalRead(SW_IN) == LOW && check_state == LOW) {
+     //Serial.println("press :");
+     check_state = HIGH;         // Mark that the button is being pressed
+    delay(BOUNCE_TIME); // Apply debounce delay
+  }
+
+  // Check if the button is released
+  if (digitalRead(SW_IN) == HIGH && check_state == HIGH) {
+    //Serial.println("unpress");
+    check_state = LOW;  // Reset the state for the next button press
+    return HIGH;  // Indicate that the button was successfully pressed and released
+  }
+  return LOW; // Return false if the button is not in the desired state
+}
+
 // Ignition - ignition time set in mS !!!
 void Ignition(int ignition_time) {
   digitalWrite (SPARK_OUT, HIGH);
@@ -106,12 +124,12 @@ void Ignition(int ignition_time) {
 // Calibration - read trimer and set PWM only during SW pressed !!!
 void Calibration(){
   Ignition(SPARK_TIME);
-  Display_full_Number(88) ;
+  NUMBER_TO_DISPLAY(88*UNIT_CALIBRATION) ;
   while  (switch_state == LOW) {
      analogWrite(ELECTROD_PWM, pwm);
      trimmer_read = analogRead(SET_CURRENT_TRIMER_IN);
      pwm = map(trimmer_read,0,1024, MIN_PWM, MAX_PWM);
-     Display_full_Number(pwm);
+     NUMBER_TO_DISPLAY(pwm*UNIT_CALIBRATION);
      switch_state = digitalRead(SW_IN); // wait switch release 
     }
   digitalWrite (ELECTROD_PWM, LOW);
@@ -124,25 +142,23 @@ void Calibration(){
 // Count_Down - time to count in SEC (not mS)!!!
 void Count_Down(uint32_t Time_To_Count) {
 //int switch_state = HIGH ; 
-uint32_t time_from_start = millis()  ;
-uint32_t temp_pass_time = millis() - time_from_start; 
-uint32_t temp_time_to_show = (Time_To_Count - temp_pass_time/1000) ;
-//Display_full_Number (temp_time_to_show);
-while (temp_pass_time <= Time_To_Count*1000) {
-    temp_time_to_show = (Time_To_Count - temp_pass_time/1000) ;
-    Display_full_Number (temp_time_to_show);
-    if (temp_time_to_show <=BLINK_TIME){
-      delay (BLINK_ON);    
-      switch_state = digitalRead(SW_IN);
-      if (switch_state == LOW) {break;} ; // exit count down if sw pressed 
-      Blank_Digit(3);
-      Blank_Digit(2);
-      delay (BLINK_OFF);
-      }
-  temp_pass_time = millis() - time_from_start;
-  switch_state = digitalRead(SW_IN);
-  if (switch_state == LOW) {break;} ; // exit count down if sw preased 
-  }
+  uint32_t time_from_start = millis()  ;
+  uint32_t temp_pass_time = millis() - time_from_start; 
+  uint32_t temp_time_to_show = (Time_To_Count - temp_pass_time/1000) ;
+  //Display_full_Number (temp_time_to_show);
+  while (temp_pass_time <= Time_To_Count*1000) {
+      electrolysis_time = temp_time_to_show;
+      temp_time_to_show = (Time_To_Count - temp_pass_time/1000) ;
+      NUMBER_TO_DISPLAY (temp_time_to_show*UNIT_CALIBRATION);
+      if (temp_time_to_show <=BLINK_TIME){
+        delay (BLINK_ON);    
+        blank_Digit(LEFT_DIGIT);
+        blank_Digit(MIDDLE_DIGIT);
+        delay (BLINK_OFF);
+        }
+    temp_pass_time = millis() - time_from_start;
+    if (PRESS_BUTTON()) {break;} ; // exit count down if sw pressed 
+  } 
 }
 
 /****************************************************/
@@ -191,10 +207,12 @@ int Read_Encoder(){
      temp_return = -1;
      break;
      default:
-     Eror_counter = Eror_counter+1;//for test only (or not...)
+     Error_counter = Error_counter+1;//for test only (or not...)
      break;
     }
   return temp_return;  
 }
+
+
 
 #endif

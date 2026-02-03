@@ -22,6 +22,7 @@
 // -- encoder reading parameters and vairables 
 
 uint32_t electrolysis_time = DEFAULT_ELECTROLYSIS_TIME ; //Seconds
+bool first_read = true;//allow to increase the eletrolise time for only the first session
 
 int prescalar_counter = 0 ; //encoder coun per "click"
 int Move_Sum  = 0; //Counting total encoder movment 
@@ -37,7 +38,6 @@ int pwm  = DEFAULT_PWM ; // drive electrolysis cyrrent
 //uint32_t Idle_Time_Counter = 0; 
 //uint32_t Current_Time = 0; 
 //uint32_t Time_From_Start = 0; 
-
 
 // 7 segments parameters
 //const int MAX_NUM_TO_DISPLAY  = 99 ; //the maximum number to display
@@ -58,15 +58,15 @@ void Init_Output(int IO_Pin){
 }
 
 /***********/ 
-// Calibration - read trimer and set PWM only during SW preased !!!
+// Calibration - read trimer and set PWM only during SW pressed !!!
 void Calibration(){
   Ignition(SPARK_TIME);
-  Display_full_Numnber(88) ;
+  Display_full_Number(88) ;
   while  (switch_state == LOW) {
      analogWrite(ELECTROD_PWM, pwm);
      trimmer_read = analogRead(SET_CURRENT_TRIMER_IN);
      pwm = map(trimmer_read,0,1024, MIN_PWM, MAX_PWM);
-     Display_full_Numnber(pwm);
+     Display_full_Number(pwm);
      switch_state = digitalRead(SW_IN); // wait switch release 
     }
   digitalWrite (ELECTROD_PWM, LOW);
@@ -89,14 +89,14 @@ void Count_Down(uint32_t Time_To_Count) {
 uint32_t time_from_start = millis()  ;
 uint32_t temp_pass_time = millis() - time_from_start; 
 uint32_t temp_time_to_show = (Time_To_Count - temp_pass_time/1000) ;
-//Display_full_Numnber (temp_time_to_show);
+//Display_full_Number (temp_time_to_show);
 while (temp_pass_time <= Time_To_Count*1000) {
     temp_time_to_show = (Time_To_Count - temp_pass_time/1000) ;
-    Display_full_Numnber (temp_time_to_show);
+    Display_full_Number (temp_time_to_show);
     if (temp_time_to_show <=BLINK_TIME){
       delay (BLINK_ON);    
       switch_state = digitalRead(SW_IN);
-      if (switch_state == LOW) {break;} ; // exit count down if sw preased 
+      if (switch_state == LOW) {break;} ; // exit count down if sw pressed 
       Blank_Digit(3);
       Blank_Digit(2);
       delay (BLINK_OFF);
@@ -109,7 +109,7 @@ while (temp_pass_time <= Time_To_Count*1000) {
 
 /****************************************************/
 
-// read encoder and returen total counting (serial print also errors..) use global variable 
+// read encoder and return total counting (serial print also errors..) use global variable 
 int Read_Encoder(){
      Old_Read = New_Read ;
      int temp_return = 0 ;
@@ -211,7 +211,7 @@ void Blank_Digit(int digit_number){
 //************************
 
 // display full number 
-void Display_full_Numnber(int Number_To_Display) {
+void Display_full_Number(int Number_To_Display) {
   Digits_from_Number(Number_To_Display);
   Serial.print ("Now display");  
   Serial.print ("\t"); //tab
@@ -268,18 +268,18 @@ void setup() {
       delay (WAIT_FOR_CALIBRATION) ;  }//
   switch_state = digitalRead(SW_IN);
   if (switch_state == LOW) { // start count down 
-      Calibration() ;  }//  if switch presed long enought - call calibrastion 
+      Calibration() ;  }//  if switch presed long enought - call calibration 
  trimmer_read = analogRead(SET_CURRENT_TRIMER_IN);
  pwm = map(trimmer_read,0,1024, MIN_PWM, MAX_PWM);   
  
- Display_full_Numnber (electrolysis_time);
+ Display_full_Number (electrolysis_time);
  Read_Encoder();
 }
 
 void loop() {
 //  int switch_state = HIGH ; 
   int temp_read = Read_Encoder();
-  Display_full_Numnber (electrolysis_time);
+  Display_full_Number (electrolysis_time);
   if (temp_read != 0) {
     prescalar_counter = prescalar_counter + temp_read;
      if (prescalar_counter >= PRESCALAR ) {
@@ -292,9 +292,15 @@ void loop() {
       }
       
       if (electrolysis_time <=  MIN_ELECTROLYSIS_TIME) { electrolysis_time =  MIN_ELECTROLYSIS_TIME;}
-      if (electrolysis_time >=  MAX_ELECTROLYSIS_TIME) { electrolysis_time =  MAX_ELECTROLYSIS_TIME;}
+      if (electrolysis_time >=  MAX_ELECTROLYSIS_TIME && first_read == false) {
+         electrolysis_time =  MAX_ELECTROLYSIS_TIME;
+         }
+      else if(electrolysis_time >=  MAX_ELECTROLYSIS_TIME_FIRST_READ && first_read == true) {
+         electrolysis_time =  MAX_ELECTROLYSIS_TIME_FIRST_READ;
+         }
+      
       Serial.println (electrolysis_time);
-     // Display_full_Numnber (electrolysis_time);
+     // Display_full_Number (electrolysis_time);
   }
 switch_state = digitalRead(SW_IN);
   if (switch_state == LOW) { // start count down 
@@ -302,6 +308,7 @@ switch_state = digitalRead(SW_IN);
     while  (switch_state == LOW) {
     switch_state = digitalRead(SW_IN); // wait switch release 
      }
+     first_read = false;
   // delay (BOUNCE_TIME);
      Ignition(SPARK_TIME);
      digitalWrite (PS_OUT, HIGH);
@@ -310,7 +317,7 @@ switch_state = digitalRead(SW_IN);
      //analogWrite(ELECTROD_PWM, pwm);
      Count_Down (electrolysis_time); // exit count down is sw preased 
      Ignition(SPARK_TIME);
-     Display_full_Numnber(0) ; // just for case of igniting during count down 
+     Display_full_Number(0) ; // just for case of igniting during count down 
      //analogWrite(ELECTROD_PWM, 0);
 //     digitalWrite (ELECTROD_PWM, LOW);
 //     digitalWrite (ELECTROD_PWM, LOW);// make sure

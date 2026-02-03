@@ -1,5 +1,6 @@
 #ifndef CONSTANTS
 #define CONSTANTS
+#define DEMO
 /*  IO map
  *  Encoder bits: BIT_0 - D2,   BIT_1 - D3
  *  BCD bits: A-D3, B-D4, C-D5,  D-D6
@@ -13,15 +14,15 @@
  *                 RST-|       |-RST
  *                 GND-|       |-+5V
  *            SW_IN D2-|       |-A7  
- *            BCD_A D3-|       |-A6  
+ *            BCD_A D3-|       |-A6  SET_CURRENT_TRIMER_IN
  *            BCD_B D4-|       |-A5,
  *            BCD_C D5-|       |-A4,
  *            BCD_D D6-|       |-A3, 
- *           LE_100 D7-|       |-A2, MPXV5010GP pressure sensor
- *            LE_10 D8-|       |-A1, 
- *                  D9-|       |-A0,  
- *                 D10-|       |-Ref
- *                 D11-|       |-3.3V
+ *           LE_100 D7-|       |-A2, 
+ *            LE_10 D8-|       |-A1, ENCODER_BIT_1
+ *                  D9-|       |-A0, ENCODER_BIT_0
+ *      SPARK_OUT  D10-|       |-Ref
+ *    ELECTROD_PWM D11-|       |-3.3V
  *                 D12-|       |-D13 
  *                      --USB--
  */
@@ -34,18 +35,13 @@
 #define BCD_C (5) // Output to BCD_C (4511)
 #define BCD_D (6) // Output to BCD_D (4511)
 
-#define LE_LEFT (7) // Output Left (100th) digit LE (negative pulse) used as 10th
-#define LE_RIGHT (8) // Output right (10th) digit LE (negative pulse) used as units 
-
-//#define LE_EX (10) // Output external (units) digit LE (negative pulse) not used 
-#define ELECTROD_PWM (11) // Output to FET drive electrod current
-#define PS_OUT (11) // Output to FET drive power supply
-
+#define LE_CENTURIES (7) // Output Left (100th) digit LE (negative pulse) used as 100th
+#define LE_DOZENS (8) //Output middle (10th) digit LE (negative pulse) used as 10th
+#define LE_UNITS (9) // Output right digit LE (negative pulse) used as units 
 #define SPARK_OUT (10) // Output to FET drive HV spark module
+#define ELECTROD_PWM (11) // Output to FET drive electrod current
 
-
-
-#define SET_CURRENT_TRIMER_IN (A6) // analod input to set PWM
+#define SET_CURRENT_TRIMER_IN (A6) // analog input to set PWM
 
 #define ENCODER_BIT_0 (A1) // input IO for gray code bit 0, Green wire in 400 and 100 ppr encoders 
 #define ENCODER_BIT_1 (A0) // input IO for gray code bit 1, white wire in 400 and 100 ppr encoders 
@@ -70,16 +66,16 @@ int const  BLINK_ON = 800 ; //mSeconds
 int const  BLINK_OFF = 200 ; //mSeconds
 int const  BLINK_TIME = 5;// Seconds !!
 int const  BOUNCE_TIME = 50; //ms
-
+bool check_state = false;
 //-- Parameters and global variable ---
 // -- encoder reading parameters and vairables 
 
 uint32_t electrolysis_time = DEFAULT_ELECTROLYSIS_TIME ; //Seconds
 bool first_read = true;//allow to increase the eletrolise time for only the first session
 
-int prescalar_counter = 0 ; //encoder coun per "click"
+int prescalar_counter = 0 ; //encoder count per "click"
 int Move_Sum  = 0; //Counting total encoder movment 
-int Eror_counter = 0;// to check if encoder reading is OK
+int Error_counter = 0;// to check if encoder reading is OK
 byte Old_Read = 0; // old 2 bits read from encoder 
 byte New_Read = 0; // new 2 bits read from encoder 
 byte Check_Direction = 0; // 4 bits (old1, old0, new1, new0) 
@@ -99,6 +95,14 @@ int Number_To_Display = 0;
 int Digit_3_To_Display = 0;// Left (100th) digit to disply - used as 10th
 int Digit_2_To_Display = 0;// Mid right (10th) digit to disply  - used as units 
 int Digit_1_To_Display = 0;// right (external unit) digit to disply - not used for winf tunnel
+
+const int8_t  Number_OF_7SEG = 3;
+const int8_t RIGHT_DIGIT = 1;
+const int8_t MIDDLE_DIGIT = 2;
+const int8_t LEFT_DIGIT = 3;
+const int UNIT_CALIBRATION = 10; //if we use only the left and the midlle digit multiply the result by 10
+
+///////////////////////////////////////////////
 
 /********************************/
 #endif
