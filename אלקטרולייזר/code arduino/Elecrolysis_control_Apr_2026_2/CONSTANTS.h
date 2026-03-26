@@ -48,7 +48,7 @@
 
 
 int const  MIN_ELECTROLYSIS_TIME = 5 ; //Seconds
-int const  MAX_ELECTROLYSIS_TIME = 80 ; //Seconds
+int const  MAX_ELECTROLYSIS_TIME = 60 ; //Seconds
 int const  MAX_ELECTROLYSIS_TIME_FIRST_READ = 80;
 uint32_t const DEFAULT_ELECTROLYSIS_TIME = 45; //sec 
 
