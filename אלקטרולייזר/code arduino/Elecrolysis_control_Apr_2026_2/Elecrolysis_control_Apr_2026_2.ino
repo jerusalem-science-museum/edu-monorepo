@@ -55,6 +55,7 @@ void setup() {
  Serial.println (pwm);
  NUMBER_TO_DISPLAY (electrolysis_time*UNIT_CALIBRATION);
  Read_Encoder();
+ Ignition(SPARK_TIME);
  Serial.println ("init");
 }
 
