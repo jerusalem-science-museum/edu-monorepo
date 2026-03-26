@@ -49,7 +49,7 @@
 
 int const  MIN_ELECTROLYSIS_TIME = 5 ; //Seconds
 int const  MAX_ELECTROLYSIS_TIME = 60 ; //Seconds
-int const  MAX_ELECTROLYSIS_TIME_FIRST_READ = 80;
+int const  MAX_ELECTROLYSIS_TIME_FIRST_READ = 60;
 uint32_t const DEFAULT_ELECTROLYSIS_TIME = 45; //sec 
 
 int const PRESCALAR = 4 ; //encoder count per "click"
