@@ -90,10 +90,11 @@ void loop() {
     first_read = false;
     //trimmer_read = analogRead(SET_CURRENT_TRIMER_IN);// to enable trimmer change between demo
     //pwm = map(trimmer_read,0,1024, MIN_PWM, MAX_PWM);
+    Serial.println("push button start count down");
     analogWrite(ELECTROD_PWM, pwm);
-
+    delay(200);
     Count_Down(electrolysis_time); // exit count down is sw preased 
-    
+    Serial.println("push button stop count down");
     if(electrolysis_time <= BLINK_TIME){
       Ignition(SPARK_TIME);
       electrolysis_time = DEFAULT_ELECTROLYSIS_TIME;
