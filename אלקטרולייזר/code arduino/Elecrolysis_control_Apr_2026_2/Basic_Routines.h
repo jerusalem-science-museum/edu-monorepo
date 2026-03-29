@@ -147,17 +147,20 @@ void Count_Down(uint32_t Time_To_Count) {
   uint32_t temp_time_to_show = (Time_To_Count - temp_pass_time/1000) ;
   //Display_full_Number (temp_time_to_show);
   while (temp_pass_time <= Time_To_Count*1000) {
-      electrolysis_time = temp_time_to_show;
-      temp_time_to_show = (Time_To_Count - temp_pass_time/1000) ;
-      NUMBER_TO_DISPLAY (temp_time_to_show*UNIT_CALIBRATION);
-      if (temp_time_to_show <=BLINK_TIME){
-        delay (BLINK_ON);    
-        blank_Digit(LEFT_DIGIT);
-        blank_Digit(MIDDLE_DIGIT);
-        delay (BLINK_OFF);
-        }
+    electrolysis_time = temp_time_to_show;
+    temp_time_to_show = (Time_To_Count - temp_pass_time/1000) ;
+    NUMBER_TO_DISPLAY (temp_time_to_show*UNIT_CALIBRATION);
+    if (temp_time_to_show <=BLINK_TIME){
+      delay(BLINK_ON);    
+      blank_Digit(LEFT_DIGIT);
+      blank_Digit(MIDDLE_DIGIT);
+      delay(BLINK_OFF);
+      }
     temp_pass_time = millis() - time_from_start;
-    if (PRESS_BUTTON()) {break;} ; // exit count down if sw pressed 
+    if (PRESS_BUTTON()) {
+      Ignition(SPARK_TIME);
+      break;
+      } // exit count down if sw pressed 
   } 
 }
 

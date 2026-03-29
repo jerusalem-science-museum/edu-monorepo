@@ -88,11 +88,11 @@ void loop() {
   }
   if (PRESS_BUTTON()) { // start count down 
     first_read = false;
-    trimmer_read = analogRead(SET_CURRENT_TRIMER_IN);// to enable trimmer change between demo
-    pwm = map(trimmer_read,0,1024, MIN_PWM, MAX_PWM);
+    //trimmer_read = analogRead(SET_CURRENT_TRIMER_IN);// to enable trimmer change between demo
+    //pwm = map(trimmer_read,0,1024, MIN_PWM, MAX_PWM);
     analogWrite(ELECTROD_PWM, pwm);
 
-    Count_Down (electrolysis_time); // exit count down is sw preased 
+    Count_Down(electrolysis_time); // exit count down is sw preased 
     
     if(electrolysis_time <= BLINK_TIME){
       Ignition(SPARK_TIME);
